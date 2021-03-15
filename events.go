@@ -18,9 +18,10 @@ type traceEvent struct {
 	TID  int    `json:"tid"`
 	TS   int64  `json:"ts"`
 
-	Cat  string            `json:"cat,omitempty"`
-	Dur  int64             `json:"dur,omitempty"`
-	Args map[string]string `json:"args,omitempty"`
+	Cat   string            `json:"cat,omitempty"`
+	Cname string            `json:"cname,omitempty"`
+	Dur   int64             `json:"dur,omitempty"`
+	Args  map[string]string `json:"args,omitempty"`
 }
 
 type traceEventsGenerator struct {
@@ -190,15 +191,22 @@ func main() {
 					tid = g.GetTID(pid, test)
 				}
 				if tid != 0 {
+					color := "grey"
+					if strings.HasSuffix(msg, "finishedStatus/Passed") {
+						color = "good"
+					} else if strings.HasSuffix(msg, "finishedStatus/Failed") {
+						color = "terrible"
+					}
 					key := fmt.Sprintf("%s %s", pid, tid)
 					if previous, ok := inProgress[key]; ok {
 						g.Emit(&traceEvent{
-							Name: previous,
-							Cat:  "",
-							Ph:   "E",
-							PID:  pid,
-							TID:  tid,
-							TS:   timestamp.UnixNano() / 1e3,
+							Name:  previous,
+							Cat:   "",
+							Ph:    "E",
+							PID:   pid,
+							TID:   tid,
+							TS:    timestamp.UnixNano() / 1e3,
+							Cname: color,
 						})
 						delete(inProgress, key)
 					}
